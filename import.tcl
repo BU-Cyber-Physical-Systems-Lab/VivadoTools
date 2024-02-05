@@ -1,13 +1,16 @@
 # Create Vivado project and import all designs and verilog code.
 # Support only for ZCU102 at the moment
+puts "Creating vivado project and importing files"
 if {$argc != 3 } {
-	puts "Usage: xsct import.tcl <source folder> <proj name> <board model>"
+	puts "Usage: vivado -source import.tcl -tclargs <source folder> <proj name> <board model>"
 	puts "board models supported: ZCU102"
-    puts "This script will import all the verilog code and the block designs found in <source folder>"
+  puts "This script will import all the verilog code and the block designs found in <source folder>"
+	exit
 } else {
     set project_name [lindex $argv 1]
+		puts "Creating project ${project_name}.vivado"
     # Set the reference directory for source file relative paths (by default the value is script directory path)
-    set origin_dir [file dirname [lindex $argv 0]]
+    set origin_dir [file normalize [lindex $argv 0]]
     # Use origin directory path location variable, if specified in the tcl shell
     if { [info exists ::origin_dir_loc] } {
         set origin_dir $::origin_dir_loc
@@ -16,12 +19,12 @@ if {$argc != 3 } {
     set script_file "import.tcl"
 
     # select board specific details
-    switch [lindex $argv2] {
+    switch [lindex $argv 2] {
         "ZCU102" {
             set target_part "xczu9eg-ffvb1156-2-e"
             set board_part "xilinx.com:zcu102:part0:3.1"
             set compute_units "60"
-            set default_lib "xil_defaultlib"
+            set xil_defaultlib "xil_defaultlib"
         }
         default {
             puts "${[lindex $argv2]} does not match any configured board"
@@ -53,7 +56,7 @@ if {$argc != 3 } {
     # Set 'sources_1' fileset object
     set obj [get_filesets sources_1]
     # Import local files from the original project
-    set files [glob src/*.{v,sv,vh}]
+    set files [glob ${origin_dir}/src/*.{v,sv,vh}]
     set normalized_files [list]
     foreach src_file $files {
         lappend normalized_files [file normalize $src_file]
@@ -85,7 +88,7 @@ if {$argc != 3 } {
     # Set 'sim_1' fileset object
     set obj [get_filesets sim_1]
     # Import local files from the original project
-    set files [glob sim/*.{v,sv,vh}]
+    set files [glob ${origin_dir}/sim/*.{v,sv,vh}]
     set normalized_files [list]
     foreach src_file $files {
         lappend normalized_files [file normalize $src_file]
@@ -93,14 +96,14 @@ if {$argc != 3 } {
     set imported_files [import_files -fileset sim_1 $normalized_files]
 
     # Create block designs
-    set bd_files [glob bd/*.tcl]
+    set bd_files [glob ${origin_dir}/bd/*.tcl]
     foreach bd_file $bd_files {
-        source $origin_dir/bd/${bd_file}
+        source ${bd_file}
     }
     # Generate the wrappers
     set design_names [get_bd_designs]
     foreach design_name $design_names {
-        make_wrapper -files [get_files $design_name.bd]  -import
+        make_wrapper -files [get_files $design_name.bd] -top -import
         save_bd_design
     }
     puts "INFO: Project created:$project_name"
