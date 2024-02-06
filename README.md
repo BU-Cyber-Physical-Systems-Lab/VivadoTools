@@ -10,6 +10,7 @@ To use this script to automatically create vivado projects the underlying reposi
 - `sim`: Simulation sources (all the testbenches).
 - `bd`: The exported block designs.
 - `ip repo`: The packed IPs repository.
+- `waves`: The waveform configurations.
 
 When to create a new repository with this structure you can user the `init_repo.sh` script.
 

@@ -48,6 +48,7 @@ if {$argc != 3 } {
     set_property -name "sim.ip.auto_export_scripts" -value "1" -objects $obj
     set_property -name "simulator_language" -value "Mixed" -objects $obj
 
+		puts "Adding sources"
     # Create 'sources_1' fileset (if not found)
     if {[string equal [get_filesets -quiet sources_1] ""]} {
         create_fileset -srcset sources_1
@@ -56,13 +57,15 @@ if {$argc != 3 } {
     # Set 'sources_1' fileset object
     set obj [get_filesets sources_1]
     # Import local files from the original project
-    set files [glob ${origin_dir}/src/*.{v,sv,vh}]
-    set normalized_files [list]
-    foreach src_file $files {
+		set files [glob -nocomplain ${origin_dir}/src/*.{v,sv,vh}]
+		if [llength $files] {
+    	set normalized_files [list]
+    	foreach src_file $files {
         lappend normalized_files [file normalize $src_file]
-    }
-    set imported_files [import_files -fileset sources_1 $normalized_files]
-
+    	}
+    	add_files -fileset sources_1 -norecurse $normalized_files
+		}
+		puts "Adding ip repo"
     # Set IP repository paths
     set obj [get_filesets sources_1]
     set_property "ip_repo_paths" "[file normalize "$origin_dir/ip_repo"]" $obj
@@ -81,6 +84,7 @@ if {$argc != 3 } {
     # Set 'constrs_1' fileset properties
     set obj [get_filesets constrs_1]
 
+		puts "Adding simulation sources"
     # Create 'sim_1' fileset (if not found)
     if {[string equal [get_filesets -quiet sim_1] ""]} {
         create_fileset -simset sim_1
@@ -88,24 +92,38 @@ if {$argc != 3 } {
     # Set 'sim_1' fileset object
     set obj [get_filesets sim_1]
     # Import local files from the original project
-    set files [glob ${origin_dir}/sim/*.{v,sv,vh}]
-    set normalized_files [list]
-    foreach src_file $files {
+    set files [glob -nocomplain ${origin_dir}/sim/*.{v,sv,vh}]
+		if [llength $files] {
+    	set normalized_files [list]
+    	foreach src_file $files {
         lappend normalized_files [file normalize $src_file]
-    }
-    set imported_files [import_files -fileset sim_1 $normalized_files]
+    	}
+    	add_files -fileset sim_1 -norecurse $normalized_files
+		}
+		puts "Adding waveform configurations"
+    set files [glob -nocomplain ${origin_dir}/waves/*.wcfg]
+		if [llength $files] {
+    	set normalized_files [list]
+    	foreach src_file $files {
+        lappend normalized_files [file normalize $src_file]
+    	}
+    	add_files -fileset sim_1 -norecurse $normalized_files
+		}
 
+		puts "Adding block designs"
     # Create block designs
-    set bd_files [glob ${origin_dir}/bd/*.tcl]
-    foreach bd_file $bd_files {
+    set bd_files [glob -nocomplain ${origin_dir}/bd/*.tcl]
+		if [llength $bd_files] {
+    	foreach bd_file $bd_files {
         source ${bd_file}
-    }
-    # Generate the wrappers
-    set design_names [get_bd_designs]
-    foreach design_name $design_names {
+    	}
+    	# Generate the wrappers
+    	set design_names [get_bd_designs]
+    	foreach design_name $design_names {
         make_wrapper -files [get_files $design_name.bd] -top -import
         save_bd_design
-    }
+    	}
+		}
     puts "INFO: Project created:$project_name"
     puts "WARN: This initial import has not synthesis or implementation runs, you should reexport the project and the block designs after creating to those to save them"
     puts "INFO: To export your project go to File -> Project -> Write tcl"

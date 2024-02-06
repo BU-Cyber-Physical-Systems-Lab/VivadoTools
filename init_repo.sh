@@ -3,7 +3,7 @@
 # If an argument is provided that will be taken as the folder name for the new
 # repository, otherwise the current folder will be used
 
-PROJ_SUBFOLDERS=("src" "sim" "bd" "ip_repo")
+PROJ_SUBFOLDERS=("src" "sim" "bd" "ip_repo" "waves")
 PROJ_FOLDER="."
 if [[ -n $1  ]]; then
     PROJ_FOLDER="$1"
