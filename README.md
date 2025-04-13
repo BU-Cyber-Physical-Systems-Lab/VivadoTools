@@ -1,5 +1,6 @@
 Vivado Tools
 ============
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Collection of tools that aim to decouple Vivado versions and hardware designs.
 
